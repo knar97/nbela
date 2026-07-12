@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Mode = "connexion" | "inscription";
 type Role = "locataire" | "bailleur";
@@ -43,12 +44,72 @@ export default function AuthPage() {
     return e;
   };
 
-  const handleSubmit = () => {
+  // ── INSCRIPTION RÉELLE ──
+  // supabase.auth.signUp crée le compte dans auth.users.
+  // Les infos "options.data" sont envoyées en metadata (raw_user_meta_data),
+  // exactement ce que le trigger "gerer_nouvel_utilisateur" lit pour
+  // remplir automatiquement la table "profils".
+  async function inscrire() {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          nom,
+          prenom,
+          telephone,
+        },
+      },
+    });
+
+    if (error) {
+      setErrors({ global: traduireErreur(error.message) });
+      return;
+    }
+
+    // Le rôle "bailleur" n'est pas figé ici : il sera activé au moment
+    // où l'utilisateur publie sa première annonce (décision V1).
+    // On mémorise juste son intention pour rediriger correctement.
+    setSuccess(true);
+  }
+
+  // ── CONNEXION RÉELLE ──
+  async function connecter() {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setErrors({ global: traduireErreur(error.message) });
+      return;
+    }
+
+    setSuccess(true);
+  }
+
+  // Supabase renvoie ses messages d'erreur en anglais.
+  // On traduit les cas les plus courants pour rester cohérent avec l'app en français.
+  function traduireErreur(message: string): string {
+    if (message.includes("Invalid login credentials")) return "Email ou mot de passe incorrect.";
+    if (message.includes("User already registered")) return "Un compte existe déjà avec cet email.";
+    if (message.includes("Password should be at least")) return "Le mot de passe est trop court.";
+    return "Une erreur est survenue. Réessaie.";
+  }
+
+  const handleSubmit = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) { setErrors(e); return; }
     setErrors({});
     setLoading(true);
-    setTimeout(() => { setLoading(false); setSuccess(true); }, 1800);
+
+    if (mode === "inscription") {
+      await inscrire();
+    } else {
+      await connecter();
+    }
+
+    setLoading(false);
   };
 
   const inputStyle = (hasError?: boolean): React.CSSProperties => ({
@@ -67,7 +128,7 @@ export default function AuthPage() {
         <div style={{ background: "#fff", borderRadius: 20, padding: "56px 40px", textAlign: "center", maxWidth: 420, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,0.08)" }}>
           <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#EAF5EA", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}><ShieldIcon /></div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: "#1A3C5E", margin: "0 0 12px" }}>{mode === "inscription" ? "Compte créé !" : "Connexion réussie !"}</h2>
-          <p style={{ color: "#777", fontSize: 15, lineHeight: 1.6, marginBottom: 32 }}>{mode === "inscription" ? `Bienvenue sur Nbela en tant que ${role}.` : "Vous êtes maintenant connecté."}</p>
+          <p style={{ color: "#777", fontSize: 15, lineHeight: 1.6, marginBottom: 32 }}>{mode === "inscription" ? "Bienvenue sur Nbela. Ton compte a été créé avec succès." : "Tu es maintenant connecté à ton espace Nbela."}</p>
           <a href="/" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 32px", borderRadius: 10, background: "linear-gradient(135deg,#1A3C5E,#2E75B6)", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
             <HomeIcon /> Retour à l'accueil
           </a>
@@ -103,7 +164,14 @@ export default function AuthPage() {
 
             <div style={{ padding: "32px 32px 36px" }}>
               <h1 style={{ fontSize: 22, fontWeight: 800, color: "#1A1A2E", margin: "0 0 6px" }}>{mode === "connexion" ? "Bon retour !" : "Créer un compte"}</h1>
-              <p style={{ color: "#888", fontSize: 14, margin: "0 0 24px" }}>{mode === "connexion" ? "Connectez-vous à votre espace Nbela." : "Rejoignez des milliers d'utilisateurs à Yaoundé."}</p>
+              <p style={{ color: "#888", fontSize: 14, margin: "0 0 24px" }}>{mode === "connexion" ? "Connecte-toi à ton espace Nbela." : "Rejoins des milliers d'utilisateurs à Yaoundé."}</p>
+
+              {/* Erreur globale (venant de Supabase) */}
+              {errors.global && (
+                <div style={{ background: "#FDECEC", border: "1px solid #F5C6C6", color: "#C0392B", padding: "10px 14px", borderRadius: 10, fontSize: 13, marginBottom: 16 }}>
+                  {errors.global}
+                </div>
+              )}
 
               {/* Rôle */}
               {mode === "inscription" && (
@@ -122,6 +190,9 @@ export default function AuthPage() {
                       </button>
                     ))}
                   </div>
+                  <p style={{ fontSize: 11, color: "#aaa", marginTop: 8 }}>
+                    Tu pourras toujours devenir bailleur plus tard en publiant une annonce.
+                  </p>
                 </div>
               )}
 
@@ -190,7 +261,7 @@ export default function AuthPage() {
                   <label style={labelStyle}>Confirmer le mot de passe</label>
                   <div style={{ position: "relative" }}>
                     <span style={iconWrap}><LockIcon /></span>
-                    <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Répétez votre mot de passe" style={inputStyle(!!errors.confirm)} />
+                    <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Répète ton mot de passe" style={inputStyle(!!errors.confirm)} />
                   </div>
                   {errors.confirm && <div style={errStyle}>{errors.confirm}</div>}
                 </div>
@@ -206,18 +277,6 @@ export default function AuthPage() {
                 style={{ width: "100%", padding: "14px", borderRadius: 12, background: loading ? "#aaa" : "linear-gradient(135deg,#1A3C5E,#2E75B6)", color: "#fff", fontWeight: 800, fontSize: 16, border: "none", cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                 {loading ? "Chargement…" : <>{mode === "connexion" ? "Se connecter" : "Créer mon compte"} <ArrowIcon /></>}
               </button>
-
-              <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
-                <div style={{ flex: 1, height: 1, background: "#E0D9D0" }} />
-                <span style={{ fontSize: 13, color: "#aaa" }}>ou continuer avec</span>
-                <div style={{ flex: 1, height: 1, background: "#E0D9D0" }} />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {[{ label: "Google", bg: "#fff", color: "#444", border: "#E0D9D0" }, { label: "Facebook", bg: "#1877F2", color: "#fff", border: "#1877F2" }].map((s) => (
-                  <button key={s.label} style={{ padding: "11px", borderRadius: 10, border: `1.5px solid ${s.border}`, background: s.bg, color: s.color, fontWeight: 700, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>{s.label}</button>
-                ))}
-              </div>
 
               <p style={{ textAlign: "center", fontSize: 14, color: "#888", marginTop: 24, marginBottom: 0 }}>
                 {mode === "connexion" ? "Pas encore de compte ? " : "Déjà inscrit ? "}
