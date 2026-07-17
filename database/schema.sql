@@ -214,5 +214,23 @@ on avis for select
 using (true);
 
 -- ============================================================
+-- 4. GRANTS COMPLEMENTAIRES
+-- ============================================================
+-- RLS autorise QUI peut voir QUELLES lignes. Mais avant ça, Postgres
+-- exige un droit d'acces de base sur la table elle-meme (GRANT).
+-- Sans "Automatically expose new tables" (decoche volontairement pour
+-- plus de securite), ces GRANT doivent etre donnes manuellement,
+-- pour les deux roles possibles : "anon" (visiteur non connecte) et
+-- "authenticated" (utilisateur connecte).
+
+grant select on public.annonces to anon;
+grant select on public.photos to anon;
+grant select on public.avis to anon;
+
+grant select on public.annonces to authenticated;
+grant select on public.photos to authenticated;
+grant select on public.avis to authenticated;
+
+-- ============================================================
 -- FIN DU SCHEMA
 -- ============================================================
