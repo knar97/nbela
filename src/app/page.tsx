@@ -1,4 +1,5 @@
 "use client";
+import { useAuth } from "@/lib/AuthContext";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 
@@ -37,6 +38,7 @@ const quartiers = ["Tous", "Bastos", "Santa Barbara", "Melen", "Ngousso", "Essos
 const types = ["Tous types", "chambre", "studio", "appartement"];
 
 export default function Home() {
+  const { user, loading: authLoading, deconnexion } = useAuth();
   const [listings, setListings] = useState<Annonce[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -88,7 +90,16 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <a href="#annonces" style={{ padding: "8px 16px", borderRadius: 8, color: "#555", fontWeight: 500, fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", gap: 6 }}>{IC.grid} Annonces</a>
-            <a href="/auth" style={{ padding: "8px 16px", borderRadius: 8, color: "#1A3C5E", fontWeight: 600, fontSize: 14, border: "1.5px solid #1A3C5E", textDecoration: "none" }}>Connexion</a>
+            {authLoading ? null : user ? (
+              <button
+                onClick={async () => { await deconnexion(); window.location.href = "/"; }}
+                style={{ padding: "8px 16px", borderRadius: 8, color: "#1A3C5E", fontWeight: 600, fontSize: 14, border: "1.5px solid #1A3C5E", background: "#fff", cursor: "pointer", fontFamily: "inherit" }}
+              >
+                {user.email} · Déconnexion
+              </button>
+            ) : (
+              <a href="/auth" style={{ padding: "8px 16px", borderRadius: 8, color: "#1A3C5E", fontWeight: 600, fontSize: 14, border: "1.5px solid #1A3C5E", textDecoration: "none" }}>Connexion</a>
+            )}
             <a href="/auth" style={{ padding: "8px 18px", borderRadius: 8, color: "#fff", fontWeight: 600, fontSize: 14, background: "linear-gradient(135deg,#1A3C5E,#2E75B6)", textDecoration: "none" }}>Publier</a>
           </div>
         </div>
