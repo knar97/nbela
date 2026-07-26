@@ -231,6 +231,9 @@ grant select on public.annonces to authenticated;
 grant select on public.photos to authenticated;
 grant select on public.avis to authenticated;
 
+grant insert on public.annonces to authenticated;
+grant select on public.profils to authenticated;
+grant update on public.profils to authenticated;
 -- ============================================================
 -- FIN DU SCHEMA
 -- ============================================================
