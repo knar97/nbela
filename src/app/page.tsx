@@ -203,7 +203,7 @@ export default function Home() {
                       <span style={{ fontSize: 20, fontWeight: 900, color: "#1A3C5E" }}>{l.prix.toLocaleString("fr-FR")}</span>
                       <span style={{ fontSize: 12, color: "#888", marginLeft: 4 }}>XAF/mois</span>
                     </div>
-                    <a href={`/annonce`} style={{ padding: "8px 16px", borderRadius: 8, background: "linear-gradient(135deg,#E87722,#c9621a)", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>Voir →</a>
+                    <a href={`/annonce/${l.id}`} style={{ padding: "8px 16px", borderRadius: 8, background: "linear-gradient(135deg,#E87722,#c9621a)", color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none" }}>Voir →</a>
                   </div>
                 </div>
               </div>
