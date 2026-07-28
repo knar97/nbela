@@ -235,6 +235,8 @@ grant insert on public.annonces to authenticated;
 grant select on public.profils to authenticated;
 grant update on public.profils to authenticated;
 grant insert on public.reservations to authenticated;
+grant select on public.reservations to authenticated;
+grant update on public.reservations to authenticated;
 -- ============================================================
 -- FIN DU SCHEMA
 -- ============================================================

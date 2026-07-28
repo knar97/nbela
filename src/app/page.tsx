@@ -101,6 +101,7 @@ export default function Home() {
               <a href="/auth" style={{ padding: "8px 16px", borderRadius: 8, color: "#1A3C5E", fontWeight: 600, fontSize: 14, border: "1.5px solid #1A3C5E", textDecoration: "none" }}>Connexion</a>
             )}
             <a href="/publier" style={{ padding: "8px 18px", borderRadius: 8, color: "#fff", fontWeight: 600, fontSize: 14, background: "linear-gradient(135deg,#1A3C5E,#2E75B6)", textDecoration: "none" }}>Publier</a>
+            <a href="/dashboard" style={{ padding: "8px 16px", borderRadius: 8, color: "#1A3C5E", fontWeight: 600, fontSize: 14, border: "1.5px solid #1A3C5E", textDecoration: "none" }}>Tableau de bord</a>
           </div>
         </div>
       </nav>
