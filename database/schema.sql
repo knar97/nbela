@@ -237,6 +237,26 @@ grant update on public.profils to authenticated;
 grant insert on public.reservations to authenticated;
 grant select on public.reservations to authenticated;
 grant update on public.reservations to authenticated;
+
+-- ============================================================
+-- 5. STORAGE — PHOTOS DES ANNONCES
+-- ============================================================
+-- Bucket "photos" créé manuellement via Storage > New bucket (Public bucket coché).
+-- Politiques de sécurité sur le stockage :
+
+create policy "Photos publiques en lecture"
+on storage.objects for select
+using (bucket_id = 'photos');
+
+create policy "Utilisateurs connectes uploadent"
+on storage.objects for insert
+to authenticated
+with check (bucket_id = 'photos');
+
+create policy "Suppression de ses propres photos"
+on storage.objects for delete
+to authenticated
+using (bucket_id = 'photos' and auth.uid() = owner);
 -- ============================================================
 -- FIN DU SCHEMA
 -- ============================================================
